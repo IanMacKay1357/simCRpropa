@@ -3,7 +3,7 @@
 #SBATCH --mail-type=ALL # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=<>   # Where to send mail	
 #SBATCH --time=1-00:00:00       ### Wall clock time limit in Days-HH:MM:SS
-#SBATCH --output=output/test/sample_slurm.log  # Standard output and error log
+#SBATCH --output=/home/iamackay/simCRpropa/output/test/sample_slurm.log  # Standard output and error log
 #SBATCH --mem=1G                    
 #SBATCH --array=0-1
 #SBATCH --partition=windfall
@@ -12,7 +12,7 @@ echo "Config file used:"
 echo $1
 
 module load crpropa 
-export PYTHONPATH=$PYTHONPATH:/hb/home/mspletts/simCRPropaVoids/simCRpropa/:/hb/home/mspletts/fermiAnalysis/ 
-export LSCRATCH="/hb/home/mspletts/simCRPropaVoids/simCRpropa/output/_scratch"
-python simCRpropa/scripts/run_crpropa_em_cascade.py --conf $1 
+export PYTHONPATH=$PYTHONPATH:/home/iamackay/simCRpropa/simCRpropa:/home/iamackay/fermiAnalysis
+export LSCRATCH="/home/iamackay/simCRpropa/simCRpropa/output/_scratch"
+python /home/iamackay/simCRpropa/simCRpropa/scripts/run_crpropa_em_cascade.py --conf $1 
 
