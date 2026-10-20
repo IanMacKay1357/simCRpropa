@@ -1,6 +1,6 @@
 FileIO:
-    outdir: /hb/home/mspletts/simCRPropaVoids/simCRpropa/output/inj_powlaw
-    basedir: /hb/home/mspletts/simCRPropaVoids/simCRpropa/output/inj_powlaw
+    outdir: /home/iamackay/simCRpropa/output/inj_powlaw
+    basedir: /home/iamackay/simCRpropa/output/inj_powlaw
 
 
 Cosmology:
@@ -88,6 +88,7 @@ Source:
     usePowerLawSpectrum: True 
 
     usemuparserSpectrum: False
+    muparserSpectrum: False
     cutoff: None
 
     # Minimum energy (in eV) of injected particles. Used if `useSpectrum=True`.
@@ -162,8 +163,8 @@ Bfield:
     #   - turbulence (turbulent field...)
     #   - geo
     type: geo
-
     b_void: 0.0
+    evolution_m: false
 
     # Only read if `type=geo`
     geo:

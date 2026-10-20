@@ -161,8 +161,8 @@ Bfield:
     #   - turbulence (turbulent field...)
     #   - txt (magnetic field values specific by a text file `fnTxt` and grid by `....`)
     type: cell
-
     b_void: 0.0
+    evolution_m: False
 
     evolution_m: -2.0
 

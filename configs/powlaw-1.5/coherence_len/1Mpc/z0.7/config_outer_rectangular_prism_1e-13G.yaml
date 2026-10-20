@@ -162,8 +162,8 @@ Bfield:
     #   - turbulence (turbulent field...)
     #   - geo
     type: geo
-
     b_void: 0.0
+    evolution_m: false
 
     evolution_m: -2.0
 

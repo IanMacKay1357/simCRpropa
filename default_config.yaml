@@ -1,6 +1,6 @@
 FileIO:
-    outdir: /hb/home/mspletts/simCRPropaVoids/simCRpropa/output/test
-    basedir: /hb/home/mspletts/simCRPropaVoids/simCRpropa/output/test
+    outdir: /home/iamackay/simCRpropa/simCRpropa/output/test
+    basedir: /home/iamackay/simCRpropa/simCRpropa/output/test
 
 
 Cosmology:

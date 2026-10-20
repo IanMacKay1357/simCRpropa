@@ -88,6 +88,7 @@ Source:
     usePowerLawSpectrum: True 
 
     usemuparserSpectrum: False
+    muparserSpectrum: False
     cutoff: None
 
     # Minimum energy (in eV) of injected particles. Used if `useSpectrum=True`.
@@ -162,8 +163,8 @@ Bfield:
     #   - turbulence (turbulent field...)
     #   - txt (magnetic field values specific by a text file `fnTxt` and grid by `....`)
     type: cell
-
     b_void: 0.0
+    evolution_m: False
 
     # Only read if `type=cell`
     cell:

@@ -1,6 +1,6 @@
 FileIO:
-    outdir: /hb/home/mspletts/simCRPropaVoids/simCRpropa/output/inj_powlaw
-    basedir: /hb/home/mspletts/simCRPropaVoids/simCRpropa/output/inj_powlaw
+    outdir: /home/iamackay/simCRpropa/output/inj_powlaw
+    basedir: /home/iamackay/simCRpropa/output/inj_powlaw
 
 
 Cosmology:
@@ -89,6 +89,7 @@ Source:
     usePowerLawSpectrum: True 
 
     usemuparserSpectrum: False
+    muparserSpectrum: False
     cutoff: None
 
     # Format as 1.e+3 rather than 1e+3 or 1e3 or 1.e3
@@ -161,8 +162,8 @@ Bfield:
     #   - turbulence (turbulent field...)
     #   - txt (magnetic field values specific by a text file `fnTxt` and grid by `....`)
     type: cell
-
     b_void: 0.0
+    evolution_m: False
 
     # Only read if `type=cell`
     cell:
