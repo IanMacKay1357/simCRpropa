@@ -191,7 +191,7 @@ def init_custom_rectangular_prism_bfield(
                     # B is nonzero near source
                     # It should not matter that B=/=0 beyond the observer (near the grid edge) in this case, because if interpolated
                     # to the center, the desired behavior is B=/=0 there anyway
-                    if int(obsSize)*void_loc[0] <= xi <= int(obsSize)*void_loc[1] #or xi > obsSize:
+                    if int(obsSize)*void_loc[0] <= xi <= int(obsSize)*void_loc[1]: #or xi > obsSize:
                         vect3d.x = b_void * x / d
                         vect3d.y = b_void * y / d
                         vect3d.z = b_void * z / d
@@ -538,15 +538,30 @@ class SimCRPropa(object):
                 f"{solver_dict[solver]}/Bcell{self.Bfield['B']:.2e}_seed{self.Bfield['cell']['seed']}/scale{self.Bfield['gridSpacing']:.2f}/maxStep{self.Simulation['maxStepLength']}"))
         elif self.Bfield['type'] == 'geo':
             if self.Bfield['evolution_m'] is not False:
-                self.FileIO['outdir'] = utils.mkdir(path.join(self.FileIO['outdir'], 
-                                                          solver_dict[solver], f'Bgeo_m{self.Bfield["evolution_m"]:.2f}_seed{self.Bfield["geo"]["seed"]}', f"{self.Bfield['geo']['descriptor']}_filled", 
+                if self.Bfield['geo']['descriptor'] == 'custom_rectangular_prism':
+                    self.FileIO['outdir'] = utils.mkdir(path.join(self.FileIO['outdir'], 
+                                                          solver_dict[solver], f'Bgeo_m{self.Bfield["evolution_m"]:.2f}_seed{self.Bfield["geo"]["seed"]}', f"{self.Bfield['geo']['descriptor']}_filled",
+                                                          f"void_loc[{self.Bfield["geo"]["void_loc"][0]:.2f},{self.Bfield["geo"]["void_loc"][1]:.2f}]",
                                                           f"bvoid{self.Bfield['b_void']}_bext{self.Bfield['geo']['B']}", 
                                                           f"scale{self.Bfield['gridSpacing']:.2f}", f"maxStep{self.Simulation['maxStepLength']}"))
+                else:
+                    self.FileIO['outdir'] = utils.mkdir(path.join(self.FileIO['outdir'], 
+                                                            solver_dict[solver], f'Bgeo_m{self.Bfield["evolution_m"]:.2f}_seed{self.Bfield["geo"]["seed"]}', f"{self.Bfield['geo']['descriptor']}_filled",
+                                                            f"bvoid{self.Bfield['b_void']}_bext{self.Bfield['geo']['B']}", 
+                                                            f"scale{self.Bfield['gridSpacing']:.2f}", f"maxStep{self.Simulation['maxStepLength']}"))
             else:
-                self.FileIO['outdir'] = utils.mkdir(path.join(self.FileIO['outdir'], 
-                                                          solver_dict[solver], f'Bgeo_seed{self.Bfield["geo"]["seed"]}', f"{self.Bfield['geo']['descriptor']}_filled", 
-                                                          f"bvoid{self.Bfield['b_void']}_bext{self.Bfield['geo']['B']}", 
-                                                          f"scale{self.Bfield['gridSpacing']:.2f}", f"maxStep{self.Simulation['maxStepLength']}"))
+                    if self.Bfield['geo']['descriptor'] == 'custom_rectangular_prism':
+                        self.FileIO['outdir'] = utils.mkdir(path.join(self.FileIO['outdir'], 
+                                                            solver_dict[solver], f'Bgeo_seed{self.Bfield["geo"]["seed"]}', f"{self.Bfield['geo']['descriptor']}_filled", 
+                                                            f"void_loc[{self.Bfield["geo"]["void_loc"][0]:.2f},{self.Bfield["geo"]["void_loc"][1]:.2f}]",
+                                                            f"bvoid{self.Bfield['b_void']}_bext{self.Bfield['geo']['B']}",
+                                                            f"scale{self.Bfield['gridSpacing']:.2f}", f"maxStep{self.Simulation['maxStepLength']}"))
+                    else:
+                        self.FileIO['outdir'] = utils.mkdir(path.join(self.FileIO['outdir'], 
+                                                            solver_dict[solver], f'Bgeo_seed{self.Bfield["geo"]["seed"]}', f"{self.Bfield['geo']['descriptor']}_filled", 
+                                                            f"bvoid{self.Bfield['b_void']}_bext{self.Bfield['geo']['B']}",
+                                                            f"scale{self.Bfield['gridSpacing']:.2f}", f"maxStep{self.Simulation['maxStepLength']}"))
+            
         elif self.Bfield['type'] == 'txt':
             self.FileIO['outdir'] = utils.mkdir(path.join(self.FileIO['outdir'], 
                                                           solver_dict[solver], 'Btxt', self.Bfield['txt']['fnDescriptor'], f"maxStep{self.Simulation['maxStepLength']}"))
@@ -632,6 +647,9 @@ class SimCRPropa(object):
             elif self.Bfield['geo']['descriptor'] == 'inner_rectangular_prism':
                 init_rectangular_prism_bfield(field_zero_near_origin=False, 
                                               vgrid=vgrid, obsSize=obsSize, b_void=self.Bfield['b_void']*gauss, b_ext=self.Bfield['geo']['B']*gauss, seed=self.Bfield['geo']['seed'])
+            elif self.Bfield['geo']['descriptor'] == 'custom_rectangular_prism':
+                init_custom_rectangular_prism_bfield(void_loc=self.Bfield['geo']['void_loc'], 
+                                                vgrid=vgrid, obsSize=obsSize, b_void=self.Bfield['b_void']*gauss, b_ext=self.Bfield['geo']['B']*gauss, seed=self.Bfield['geo']['seed'])
             else:
                 import sys
                 sys.exit(f"Unrecognized type {self.Bfield['geo']['descriptor']}")
