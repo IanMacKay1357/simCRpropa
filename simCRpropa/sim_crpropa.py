@@ -585,6 +585,76 @@ class SimCRPropa(object):
 
         return
 
+    def make_Bfield_plots(vgrid):
+        """Plot the three grid planes nearest to x=0, y=0, and z=0."""
+
+        void_loc = self.Bfield["geo"]["void_loc"]
+
+        nx, ny, nz = vgrid.getNx(), vgrid.getNy(), vgrid.getNz()
+        origin = vgrid.getOrigin()
+        spacing = vgrid.getSpacing()
+        coordinates = (
+            (origin.x + (np.arange(nx) + 0.5) * spacing.x) / Mpc,
+            (origin.y + (np.arange(ny) + 0.5) * spacing.y) / Mpc,
+            (origin.z + (np.arange(nz) + 0.5) * spacing.z) / Mpc,
+        )
+        ix, iy, iz = (int(np.abs(axis).argmin()) for axis in coordinates)
+
+        field = np.empty((nx, ny, nz, 3), dtype=float)
+        for i in range(nx):
+            for j in range(ny):
+                for k in range(nz):
+                    vector = vgrid.get(i, j, k)
+                    field[i, j, k] = vector.x, vector.y, vector.z
+
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5), constrained_layout=True)
+        slices = (
+            (
+                axes[0], coordinates[1], coordinates[2],
+                np.linalg.norm(field[ix, :, :, :], axis=-1).T,
+                field[ix, :, :, 1].T, field[ix, :, :, 2].T,
+                f"Void ϵ [{void_loc[0]}, {void_loc[1]}] of LOS, x ≈ {coordinates[0][ix]:g} Mpc (nearest to 0)", "y (Mpc)", "z (Mpc)",
+            ),
+            (
+                axes[1], coordinates[0], coordinates[2],
+                np.linalg.norm(field[:, iy, :, :], axis=-1).T,
+                field[:, iy, :, 0].T, field[:, iy, :, 2].T,
+                f"Void ϵ [{void_loc[0]}, {void_loc[1]}] of LOS, y ≈ {coordinates[1][iy]:g} Mpc (nearest to 0)", "x (Mpc)", "z (Mpc)",
+            ),
+            (
+                axes[2], coordinates[0], coordinates[1],
+                np.linalg.norm(field[:, :, iz, :], axis=-1).T,
+                field[:, :, iz, 0].T, field[:, :, iz, 1].T,
+                f"Void ϵ [{void_loc[0]}, {void_loc[1]}] of LOS, z ≈ {coordinates[2][iz]:g} Mpc (nearest to 0)", "x (Mpc)", "y (Mpc)",
+            ),
+        )
+
+        for ax, horizontal, vertical, magnitude, u_component, v_component, title, xlabel, ylabel in slices:
+            image = ax.pcolormesh(horizontal, vertical, magnitude, shading="nearest")
+            horizontal_step = max(1, int(np.ceil(len(horizontal) / 20)))
+            vertical_step = max(1, int(np.ceil(len(vertical) / 20)))
+            u_sample = u_component[::vertical_step, ::horizontal_step]
+            v_sample = v_component[::vertical_step, ::horizontal_step]
+            in_plane_magnitude = np.hypot(u_sample, v_sample)
+            u_direction = np.divide(
+                u_sample, in_plane_magnitude,
+                out=np.zeros_like(u_sample), where=in_plane_magnitude != 0,
+            )
+            v_direction = np.divide(
+                v_sample, in_plane_magnitude,
+                out=np.zeros_like(v_sample), where=in_plane_magnitude != 0,
+            )
+            ax.quiver(
+                horizontal[::horizontal_step], vertical[::vertical_step],
+                u_direction, v_direction, color="white", pivot="mid",
+                scale_units="width", scale=30,
+            )
+            ax.set(title=title, xlabel=xlabel, ylabel=ylabel, aspect="equal")
+
+        fig.colorbar(image, ax=axes, label="Magnetic-field magnitude [T]")
+        plt.show()
+        return fig, axes
+
     def _create_bfield(self, gridPad=2):
         """Set up simulation volume and magnetic field.
         PUT ALL UNITS IN SI.
@@ -593,6 +663,8 @@ class SimCRPropa(object):
         """
         # Origin for magnetic field grid, in all cases
         logging.info(f"Setting up B field with type: {self.Bfield['type'] }")
+        if self.Bfield['type'] == 'geo':
+            logging.info(f"Using geometry: {self.Bfield['geo']['descriptor']}")
         gridOrigin = Vector3d(0, 0, 0)
 
         if self.Bfield['type'] == 'cell':
@@ -729,75 +801,7 @@ class SimCRPropa(object):
 
         return self.bField, vgrid, gridSpacingMpcImplicit, self.__extentMeters, obsSize, gridSize
 
-    def make_Bfield_plots(vgrid):
-        """Plot the three grid planes nearest to x=0, y=0, and z=0."""
-
-        void_loc = self.Bfield["geo"]["void_loc"]
-
-        nx, ny, nz = vgrid.getNx(), vgrid.getNy(), vgrid.getNz()
-        origin = vgrid.getOrigin()
-        spacing = vgrid.getSpacing()
-        coordinates = (
-            (origin.x + (np.arange(nx) + 0.5) * spacing.x) / Mpc,
-            (origin.y + (np.arange(ny) + 0.5) * spacing.y) / Mpc,
-            (origin.z + (np.arange(nz) + 0.5) * spacing.z) / Mpc,
-        )
-        ix, iy, iz = (int(np.abs(axis).argmin()) for axis in coordinates)
-
-        field = np.empty((nx, ny, nz, 3), dtype=float)
-        for i in range(nx):
-            for j in range(ny):
-                for k in range(nz):
-                    vector = vgrid.get(i, j, k)
-                    field[i, j, k] = vector.x, vector.y, vector.z
-
-        fig, axes = plt.subplots(1, 3, figsize=(18, 5), constrained_layout=True)
-        slices = (
-            (
-                axes[0], coordinates[1], coordinates[2],
-                np.linalg.norm(field[ix, :, :, :], axis=-1).T,
-                field[ix, :, :, 1].T, field[ix, :, :, 2].T,
-                f"Void ϵ [{void_loc[0]}, {void_loc[1]}] of LOS, x ≈ {coordinates[0][ix]:g} Mpc (nearest to 0)", "y (Mpc)", "z (Mpc)",
-            ),
-            (
-                axes[1], coordinates[0], coordinates[2],
-                np.linalg.norm(field[:, iy, :, :], axis=-1).T,
-                field[:, iy, :, 0].T, field[:, iy, :, 2].T,
-                f"Void ϵ [{void_loc[0]}, {void_loc[1]}] of LOS, y ≈ {coordinates[1][iy]:g} Mpc (nearest to 0)", "x (Mpc)", "z (Mpc)",
-            ),
-            (
-                axes[2], coordinates[0], coordinates[1],
-                np.linalg.norm(field[:, :, iz, :], axis=-1).T,
-                field[:, :, iz, 0].T, field[:, :, iz, 1].T,
-                f"Void ϵ [{void_loc[0]}, {void_loc[1]}] of LOS, z ≈ {coordinates[2][iz]:g} Mpc (nearest to 0)", "x (Mpc)", "y (Mpc)",
-            ),
-        )
-
-        for ax, horizontal, vertical, magnitude, u_component, v_component, title, xlabel, ylabel in slices:
-            image = ax.pcolormesh(horizontal, vertical, magnitude, shading="nearest")
-            horizontal_step = max(1, int(np.ceil(len(horizontal) / 20)))
-            vertical_step = max(1, int(np.ceil(len(vertical) / 20)))
-            u_sample = u_component[::vertical_step, ::horizontal_step]
-            v_sample = v_component[::vertical_step, ::horizontal_step]
-            in_plane_magnitude = np.hypot(u_sample, v_sample)
-            u_direction = np.divide(
-                u_sample, in_plane_magnitude,
-                out=np.zeros_like(u_sample), where=in_plane_magnitude != 0,
-            )
-            v_direction = np.divide(
-                v_sample, in_plane_magnitude,
-                out=np.zeros_like(v_sample), where=in_plane_magnitude != 0,
-            )
-            ax.quiver(
-                horizontal[::horizontal_step], vertical[::vertical_step],
-                u_direction, v_direction, color="white", pivot="mid",
-                scale_units="width", scale=30,
-            )
-            ax.set(title=title, xlabel=xlabel, ylabel=ylabel, aspect="equal")
-
-        fig.colorbar(image, ax=axes, label="Magnetic-field magnitude [T]")
-        plt.show()
-        return fig, axes
+    
 
     def _create_electron_positron_observer(self):
         """Set up the observer for the simulation. Observe electrons and positrons."""
